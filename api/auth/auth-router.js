@@ -16,6 +16,33 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", (req, res) => {});
+router.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const allegedUser = await User.findBy({ username }).first();
+    if (allegedUser && bcrypt.compareSync(password, allegedUser.password)) {
+      req.session.user = allegedUser;
+      res.json("welcome back!");
+    } else {
+      res.status(401).json("Invalid Credentials");
+    }
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+});
+
+router.get("/logout", (req, res) => {
+  if (req.session && req.session.user) {
+    req.session.destroy(err => {
+      if (err) {
+        res.json("No leaving!");
+      } else {
+        res.json("Have a good one!");
+      }
+    });
+  } else {
+    res.end();
+  }
+});
 
 module.exports = router;
